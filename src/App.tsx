@@ -1,50 +1,42 @@
-import React, { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Header } from '@/components/Layout/Header'
 import { Sidebar } from '@/components/Sidebar/Sidebar'
 import { MapView } from '@/components/Map/MapView'
+import { loadShapefile } from '@/utils/loadShapefile'
 import type { FilterState } from '@/types'
-
-// Dados de exemplo (substitua por fetch real ou imports de .geojson)
-const EXEMPLO_GEOJSON: GeoJSON.FeatureCollection = {
-  type: 'FeatureCollection',
-  features: [
-    {
-      type: 'Feature',
-      properties: { inscricao: '001.002.003', area: '250m²', uso: 'Residencial' },
-      geometry: {
-        type: 'Polygon',
-        coordinates: [[
-          [-48.0550, -15.8250],
-          [-48.0540, -15.8250],
-          [-48.0540, -15.8260],
-          [-48.0550, -15.8260],
-          [-48.0550, -15.8250],
-        ]],
-      },
-    },
-    {
-      type: 'Feature',
-      properties: { inscricao: '001.002.004', area: '320m²', uso: 'Comercial' },
-      geometry: {
-        type: 'Polygon',
-        coordinates: [[
-          [-48.0530, -15.8270],
-          [-48.0520, -15.8270],
-          [-48.0520, -15.8280],
-          [-48.0530, -15.8280],
-          [-48.0530, -15.8270],
-        ]],
-      },
-    },
-  ],
-}
 
 export default function App() {
   const [filters, setFilters] = useState<FilterState>({
-    planejamento: true,
-    tributos: true,
-    ambiental: true,
+    quadras: true,
+    lotes: true,
+    logradouros: true,
   })
+
+  const [quadrasData, setQuadrasData] = useState<GeoJSON.FeatureCollection | null>(null)
+  const [lotesData, setLotesData] = useState<GeoJSON.FeatureCollection | null>(null)
+  const [logradourosData, setLogradourosData] = useState<GeoJSON.FeatureCollection | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function loadAll() {
+      const [quadras, lotes, logradouros] = await Promise.all([
+        loadShapefile('quadras.zip'),
+        loadShapefile('lotes.zip'),
+        loadShapefile('logradouros.zip'),
+      ])
+      setQuadrasData(quadras)
+      setLotesData(lotes)
+      setLogradourosData(logradouros)
+      setLoading(false)
+    }
+    loadAll()
+  }, [])
+
+  const featureCounts = {
+    quadras: quadrasData?.features.length ?? 0,
+    lotes: lotesData?.features.length ?? 0,
+    logradouros: logradourosData?.features.length ?? 0,
+  }
 
   return (
     <div className="flex flex-col h-screen bg-gray-100">
@@ -53,16 +45,28 @@ export default function App() {
       <div className="flex flex-1 overflow-hidden">
         {/* Mapa — área principal */}
         <main className="flex-1 relative">
+          {loading && (
+            <div className="absolute inset-0 z-[1000] flex items-center justify-center bg-white/70">
+              <div className="flex flex-col items-center gap-3">
+                <div className="w-8 h-8 border-4 border-brand-yellow border-t-transparent rounded-full animate-spin" />
+                <span className="text-sm text-gray-600 font-medium">Carregando shapefiles…</span>
+              </div>
+            </div>
+          )}
           <MapView
             filters={filters}
-            planejamentoData={EXEMPLO_GEOJSON}
-            tributosData={EXEMPLO_GEOJSON}
-            ambientalData={EXEMPLO_GEOJSON}
+            quadrasData={quadrasData}
+            lotesData={lotesData}
+            logradourosData={logradourosData}
           />
         </main>
 
         {/* Sidebar — painel lateral */}
-        <Sidebar filters={filters} onFiltersChange={setFilters} />
+        <Sidebar
+          filters={filters}
+          onFiltersChange={setFilters}
+          featureCounts={featureCounts}
+        />
       </div>
     </div>
   )

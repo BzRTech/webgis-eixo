@@ -34,12 +34,12 @@ export interface HeaderProps {
 }
 
 export interface FilterState {
-  planejamento: boolean
-  tributos: boolean
-  ambiental: boolean
+  quadras: boolean
+  lotes: boolean
+  logradouros: boolean
 }
 
-export interface Secretaria {
+export interface LayerInfo {
   id: keyof FilterState
   label: string
   color: string

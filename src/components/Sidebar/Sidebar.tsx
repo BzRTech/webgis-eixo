@@ -2,20 +2,21 @@ import React, { useState } from 'react'
 import { FilterToggle } from './FilterToggle'
 import { SearchBar } from './SearchBar'
 import { Button } from '@/components/common/Button'
-import type { FilterState, Secretaria } from '@/types'
+import type { FilterState, LayerInfo } from '@/types'
 
-const SECRETARIAS: Secretaria[] = [
-  { id: 'planejamento', label: 'Planejamento', color: '#FCD34D', count: 2450 },
-  { id: 'tributos',     label: 'Tributos',     color: '#FBBF24', count: 1890 },
-  { id: 'ambiental',   label: 'Ambiental',    color: '#F59E0B', count: 876 },
+const LAYERS: Omit<LayerInfo, 'count'>[] = [
+  { id: 'quadras',      label: 'Quadras',      color: '#FCD34D' },
+  { id: 'lotes',        label: 'Lotes',        color: '#FBBF24' },
+  { id: 'logradouros',  label: 'Logradouros',  color: '#F59E0B' },
 ]
 
 interface SidebarProps {
   filters: FilterState
   onFiltersChange: (filters: FilterState) => void
+  featureCounts?: Record<keyof FilterState, number>
 }
 
-export function Sidebar({ filters, onFiltersChange }: SidebarProps) {
+export function Sidebar({ filters, onFiltersChange, featureCounts }: SidebarProps) {
   const [search, setSearch] = useState('')
   const [pending, setPending] = useState<FilterState>(filters)
 
@@ -28,20 +29,22 @@ export function Sidebar({ filters, onFiltersChange }: SidebarProps) {
   }
 
   function resetFilters() {
-    const all: FilterState = { planejamento: true, tributos: true, ambiental: true }
+    const all: FilterState = { quadras: true, lotes: true, logradouros: true }
     setPending(all)
     onFiltersChange(all)
   }
 
-  const totalVisible = SECRETARIAS.filter((s) => pending[s.id]).reduce((acc, s) => acc + s.count, 0)
+  const totalVisible = LAYERS
+    .filter((l) => pending[l.id])
+    .reduce((acc, l) => acc + (featureCounts?.[l.id] ?? 0), 0)
 
   return (
     <aside className="w-80 bg-white border-l border-gray-200 flex flex-col shadow-lg h-full overflow-hidden">
       {/* Header */}
       <div className="p-6 border-b border-gray-100 bg-brand-dark">
-        <h2 className="text-xl font-bold text-white">Filtros</h2>
+        <h2 className="text-xl font-bold text-white">Camadas</h2>
         <p className="text-xs text-gray-400 mt-1">
-          {totalVisible.toLocaleString('pt-BR')} registros visíveis
+          {totalVisible.toLocaleString('pt-BR')} feições visíveis
         </p>
       </div>
 
@@ -55,16 +58,16 @@ export function Sidebar({ filters, onFiltersChange }: SidebarProps) {
 
         {/* Layers */}
         <div>
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Secretarias</p>
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Dados Geográficos</p>
           <div className="space-y-1">
-            {SECRETARIAS.map((s) => (
+            {LAYERS.map((l) => (
               <FilterToggle
-                key={s.id}
-                label={s.label}
-                count={s.count}
-                color={s.color}
-                checked={pending[s.id]}
-                onChange={(v) => toggleFilter(s.id, v)}
+                key={l.id}
+                label={l.label}
+                count={featureCounts?.[l.id] ?? 0}
+                color={l.color}
+                checked={pending[l.id]}
+                onChange={(v) => toggleFilter(l.id, v)}
               />
             ))}
           </div>
@@ -74,7 +77,7 @@ export function Sidebar({ filters, onFiltersChange }: SidebarProps) {
         <div className="bg-yellow-50 border border-brand-yellow rounded-lg p-4">
           <p className="text-xs font-semibold text-yellow-800 mb-1">Dica</p>
           <p className="text-xs text-yellow-700">
-            Clique em qualquer feição no mapa para ver detalhes do imóvel ou lote.
+            Coloque seus shapefiles (.zip) na pasta <code className="bg-yellow-100 px-1 rounded">public/data/</code> como <strong>quadras.zip</strong>, <strong>lotes.zip</strong> e <strong>logradouros.zip</strong>.
           </p>
         </div>
       </div>

@@ -19,31 +19,31 @@ L.Marker.prototype.options.icon = L.icon({
 
 interface MapViewProps {
   filters: FilterState
-  planejamentoData?: GeoJSON.FeatureCollection
-  tributosData?: GeoJSON.FeatureCollection
-  ambientalData?: GeoJSON.FeatureCollection
+  quadrasData?: GeoJSON.FeatureCollection | null
+  lotesData?: GeoJSON.FeatureCollection | null
+  logradourosData?: GeoJSON.FeatureCollection | null
   center?: [number, number]
   zoom?: number
 }
 
 const LAYER_CONFIG = [
-  { id: 'planejamento' as const, color: '#FCD34D', secretaria: 'Planejamento' },
-  { id: 'tributos'     as const, color: '#FBBF24', secretaria: 'Tributos'     },
-  { id: 'ambiental'   as const, color: '#F59E0B', secretaria: 'Ambiental'    },
+  { id: 'quadras'      as const, color: '#FCD34D', label: 'Quadras' },
+  { id: 'lotes'        as const, color: '#FBBF24', label: 'Lotes' },
+  { id: 'logradouros'  as const, color: '#F59E0B', label: 'Logradouros' },
 ]
 
 export function MapView({
   filters,
-  planejamentoData,
-  tributosData,
-  ambientalData,
+  quadrasData,
+  lotesData,
+  logradourosData,
   center = [-15.8267, -48.0516], // Brasília
   zoom = 13,
 }: MapViewProps) {
-  const dataMap = {
-    planejamento: planejamentoData,
-    tributos: tributosData,
-    ambiental: ambientalData,
+  const dataMap: Record<string, GeoJSON.FeatureCollection | null | undefined> = {
+    quadras: quadrasData,
+    lotes: lotesData,
+    logradouros: logradourosData,
   }
 
   return (
@@ -59,14 +59,14 @@ export function MapView({
         maxZoom={19}
       />
 
-      {LAYER_CONFIG.map(({ id, color, secretaria }) => {
+      {LAYER_CONFIG.map(({ id, color, label }) => {
         const data = dataMap[id]
-        return data ? (
+        return data && data.features.length > 0 ? (
           <FeatureLayer
             key={id}
             data={data}
             color={color}
-            secretaria={secretaria}
+            secretaria={label}
             visible={filters[id]}
           />
         ) : null

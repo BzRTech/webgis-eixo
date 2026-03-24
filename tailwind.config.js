@@ -8,10 +8,10 @@ module.exports = {
         'brand-yellow': '#FCD34D',
         'brand-dark':   '#1F2937',
 
-        // Secretarias (camadas do mapa)
-        'planejamento': '#FCD34D',
-        'tributos':     '#FBBF24',
-        'ambiental':    '#F59E0B',
+        // Camadas do mapa
+        'quadras':      '#FCD34D',
+        'lotes':        '#FBBF24',
+        'logradouros':  '#F59E0B',
       },
     },
   },
